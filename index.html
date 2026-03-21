@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Scientific Calculator</title>
+    <title>Calculator</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -11,41 +11,25 @@
 
     <div id="display">0</div>
 
+    <!-- EXACT scientific row (2 rows of 6 buttons) -->
     <div class="sci-buttons">
+        <button class="btn dark" onclick="pressFunc('sqrt')">√</button>
+        <button class="btn dark" onclick="pressFunc('sin')">sin</button>
+        <button class="btn dark" onclick="pressFunc('cos')">cos</button>
+        <button class="btn dark" onclick="pressFunc('tan')">tan</button>
+        <button class="btn dark" onclick="pressFunc('log')">log</button>
+        <button class="btn dark" onclick="pressFunc('ln')">ln</button>
 
-        <button onclick="press('(')">(</button>
-        <button onclick="press(')')">)</button>
-        <button onclick="press('!')">x!</button>
-        <button onclick="press('^')">xʸ</button>
-        <button onclick="press('mod')">mod</button>
-
-        <button onclick="press('sin(')">sin</button>
-        <button onclick="press('cos(')">cos</button>
-        <button onclick="press('tan(')">tan</button>
-        <button onclick="press('asin(')">sin⁻¹</button>
-        <button onclick="press('acos(')">cos⁻¹</button>
-
-        <button onclick="press('atan(')">tan⁻¹</button>
-        <button onclick="press('log(')">log</button>
-        <button onclick="press('ln(')">ln</button>
-        <button onclick="press('sqrt(')">√</button>
-        <button onclick="press('cbrt(')">³√</button>
-
-        <button onclick="press('pi')">π</button>
-        <button onclick="press('e')">e</button>
-        <button onclick="press('^2')">x²</button>
-        <button onclick="press('^3')">x³</button>
-        <button onclick="press('EE')">EE</button>
-
-        <button onclick="memoryClear()">MC</button>
-        <button onclick="memoryRecall()">MR</button>
-        <button onclick="memoryAdd()">M+</button>
-        <button onclick="memorySubtract()">M−</button>
-
+        <button class="btn dark" onclick="pressConst('pi')">π</button>
+        <button class="btn dark" onclick="pressConst('e')">e</button>
+        <button class="btn dark" onclick="pressPower2()">x²</button>
+        <button class="btn dark" onclick="toggleMode()">Mode</button>
+        <button class="btn dark" onclick="pressParen()">( )</button>
+        <button class="btn dark" onclick="backspace()">⌫</button>
     </div>
 
+    <!-- Main buttons -->
     <div class="buttons">
-
         <button class="btn gray" onclick="clearDisplay()">AC</button>
         <button class="btn gray" onclick="toggleSign()">±</button>
         <button class="btn gray" onclick="percent()">%</button>
@@ -69,7 +53,6 @@
         <button class="btn dark zero" onclick="press('0')">0</button>
         <button class="btn dark" onclick="press('.')">.</button>
         <button class="btn orange" onclick="calculate()">=</button>
-
     </div>
 
 </div>
