@@ -1,35 +1,93 @@
-let display =  document.getElementById('display');
+let display = document.getElementById("display");
 let expression = "";
+let degMode = true;
+let parenOpen = true;
+
+function updateDisplay() {
+    display.textContent = expression || "0";
+}
 
 function press(value) {
-    if (expression === "0") expression = "";
     expression += value;
-    display.textContent = expression;
+    updateDisplay();
 }
 
 function clearDisplay() {
     expression = "";
-    display.textContent = "0";
+    updateDisplay();
 }
 
 function toggleSign() {
-    if (expression) {
-        expression = String(-parseFloat(expression));
-        display.textContent = expression;
-    }
+    if (!expression) return;
+    try {
+        expression = String(-eval(expression));
+        updateDisplay();
+    } catch {}
 }
 
 function percent() {
-    if (expression) {
-        expression = String(parseFloat(expression) / 100);
-        display.textContent = expression;
-    }
+    if (!expression) return;
+    try {
+        expression = String(eval(expression) / 100);
+        updateDisplay();
+    } catch {}
+}
+
+function backspace() {
+    expression = expression.slice(0, -1);
+    updateDisplay();
+}
+
+function pressParen() {
+    expression += parenOpen ? "(" : ")";
+    parenOpen = !parenOpen;
+    updateDisplay();
+}
+
+function pressConst(type) {
+    if (type === "pi") expression += "π";
+    if (type === "e") expression += "e";
+    updateDisplay();
+}
+
+function pressPower2() {
+    expression += "^2";
+    updateDisplay();
+}
+
+function pressFunc(name) {
+    expression += name + "(";
+    updateDisplay();
+}
+
+function toggleMode() {
+    degMode = !degMode;
 }
 
 function calculate() {
+    if (!expression) return;
+
     try {
-        expression = String(eval(expression));
-        display.textContent = expression;
+        let exp = expression;
+
+        exp = exp.replace(/π/g, "Math.PI").replace(/e/g, "Math.E");
+        exp = exp.replace(/(\d+(\.\d+)?)\^2/g, "Math.pow($1,2)");
+        exp = exp.replace(/sqrt\(/g, "Math.sqrt(");
+        exp = exp.replace(/log\(/g, "Math.log10(");
+        exp = exp.replace(/ln\(/g, "Math.log(");
+
+        exp = exp.replace(/sin\(([^)]+)\)/g, (_, a) =>
+            degMode ? `Math.sin((${a})*Math.PI/180)` : `Math.sin(${a})`
+        );
+        exp = exp.replace(/cos\(([^)]+)\)/g, (_, a) =>
+            degMode ? `Math.cos((${a})*Math.PI/180)` : `Math.cos(${a})`
+        );
+        exp = exp.replace(/tan\(([^)]+)\)/g, (_, a) =>
+            degMode ? `Math.tan((${a})*Math.PI/180)` : `Math.tan(${a})`
+        );
+
+        expression = String(eval(exp));
+        updateDisplay();
     } catch {
         display.textContent = "Error";
         expression = "";
