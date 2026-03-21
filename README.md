@@ -1,26 +1,468 @@
-# Calculator
-This program is designed to perform a wide range of aritmetic calculations with a clean, intuitive interface. Users can enter numbers and choose from the 4 core arithmetic operations: addition, subtraction, multiplication, and division. The calculator supports both integer numbers as well as decimals, allowing for more versatile calculations to be made. 
+import java.awt.*;
+import java.util.Arrays;
+import javax.swing.*;
+import javax.swing.border.LineBorder;
 
-Beyond basic functionality, the layout and visual design were inspired by the default Apple Calculator, featuring a modern, minimalist aesthetic with clearly defined buttons and a bold display. The interface was build using Java Swing, with custom colors, fonts, and button styling to closely match the smooth, polished feel of a real mobile calculator. 
 
-What this project does:
+public class Calculator{
+    int boardWidth = 360;
+    int boardHeight = 540;
 
-This was a fully-deisigned scientific calculator that was built in java that performs core arithmetic operations, some of them including: addition, subtraction, multiplication, and division. The user can also add more numbers to the expression instead of just 2. If they want, there is decimals, parentheses, and chained expressions that the user can use to calculate. Some of the features that make this calculator unique is that based on what mode(dark or light), the user prefers, they can toggle between dark and light. The program also includes additional features such as percentage calculations, sign toggling(+/-), square root calculations, and a backspace key for correcting input. These enhancements make the calculator more practical and user-friendly, while also demonstrating thoughtful UI design and event-driven programming. I kept the design organized by keeping the buttons together and numbers, making it easy to navigate and use. 
+    Color customLightGray = new Color(212, 212, 210);
+    Color customDarkGray = new Color(80, 80, 80);
+    Color customBlack = new Color(0, 0, 0);
+    Color customOrange = new Color(255, 149, 0);
+    
+    //light mode
+    Color lightBackground = new Color(245,245,245);
+    Color lightButton = new Color(230,230,230);
+    Color lightText = new Color(20,20,20);
 
-Why this projact was made:
+    boolean darkMode = true;
 
-I wanted to build a program that would help me to practice java GUI development using swing. This app heavily relies on UI design, so being able to build an app that felt visually appealing was important to me. I also wanted to challenge myself with parsing and evaluating mathematical expressions, helping me debug situations that were difficult at times. The main leading reason behind the building of this app was to build a complete, interactive, and visually project that was successfully accomplished. 
+    String[] buttonValues = 
+    {
+        "AC", "+/-", "%", "÷",
+        "7", "8", "9", "x",
+        "4", "5", "6", "-",
+        "1", "2", "3", "+",
+        "0", ".", "√", "=",
+        "sin", "cos", "tan", "log",
+        "ln", "π", "e", "x²", 
+        "Mode", "(", ")", "←"
+    };
 
-How I made this project:
+  String[] rightSymbols = { "÷", "x", "-", "+", "=" };
+  String[] topSymbols = { "AC","←", "+/-", "%",};
 
-I started with the layout of this by setting up frames, panels, buttons, and labels. I first planned it out on paper how I wanted the layout of this project before I started with the UI design of the calculator. Using the grid layout was very useful because it helped me achieve a clear, organized and consistent grid to layout all the buttons. I wanted to mimic the Apple calculator so I customed the colors and fonts to make a similar aesthetic. Adding action listeners and event listeners helped me form the cause and effect relationship of what do I want the calculator to do when the user presses this button? Adding helper method helped me achieve the formatting for numbers, handling the backspace, and squaring expressions or numbers. I tested and refined my layout to ensure smooth interaction and code readability. I separated display text from the internal expression string to keep the UI formatting clean while maintaining accurate calculations. I created a custom evaluator to parse and compute expressions after discovering that modern Java versions removed the built-in JavaScript engine. When evaluating trigonometric functions, I first converted the inputs from degrees to radians to match Java's math library requirements. 
+  JFrame frame = new JFrame("Calculator");
+  JLabel displayLabel = new JLabel();
+  JPanel displayPanel = new JPanel();
+  JPanel buttonsPanel = new JPanel();
 
-What I struggled with/learned:
+String expression = "";
+String displayText = "";
+boolean justEvaluated = false;
 
-As I ran tests, the result would often be error or it wouldn't print anything. This was the result from missing brackets, invalid expressions, or operator precedance. I had to debug the NullPointerException errors that were caused by the missing ScriptEngine and had to trace the messages back to the main cause of of the modern java versions. I had to fix many of the UI issues that were caused by layout incosistencies, missing brackets, or braces. When I created the custom math evaluator from scratch, I realized that the ScriptEngine was not available, which caused me to have to rewrite many of the methods inside of the constructor to match the layout and fix the main causing issues. 
+  public Calculator() {
 
-This helped me learn:
- - how to parse and evaluate mathematical expressions manually using recursive descent parsing
- - debugging complex java errors and being able to trace code back and isolate code causing errors
- - designing UI layout that made the design look organized, clean, and polished
- - approaching a problem iteratively through building the design layout, adding logic, and then refining behavior
+        frame.setSize(boardWidth, boardHeight);
+        frame.setLocationRelativeTo(null);
+        frame.setResizable(false);
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.setLayout(new BorderLayout());
+
+        displayLabel.setBackground(customBlack);
+        displayLabel.setForeground(Color.white);
+        displayLabel.setFont(new Font("Arial", Font.PLAIN, 80));
+        displayLabel.setHorizontalAlignment(JLabel.RIGHT);
+        displayLabel.setText("0");
+        displayLabel.setOpaque(true);
+
+        displayPanel.setLayout(new BorderLayout());
+        displayPanel.add(displayLabel);
+        frame.add(displayPanel, BorderLayout.NORTH);
+
+        buttonsPanel.setLayout(new GridLayout(8, 4));
+        frame.add(buttonsPanel);        
+
+        for(String buttonValue : buttonValues) {
+            JButton button = new JButton(buttonValue);
+            button.setFont(new Font("Arial", Font.PLAIN, 30));
+            button.setFocusable(false);
+            button.setBorder(new LineBorder(customBlack));
+
+            if (Arrays.asList(topSymbols).contains(buttonValue)) {
+                button.setBackground(customLightGray);
+                button.setForeground(customBlack);
+            }
+            else if (Arrays.asList(rightSymbols).contains(buttonValue)) {
+                button.setBackground(customOrange);
+                button.setForeground(Color.white);
+            }
+            else {
+                button.setBackground(customDarkGray);
+                button.setForeground(Color.white);
+            }
+            buttonsPanel.add(button);
+            button.addActionListener(e -> handleButton(buttonValue));
+        }
+
+        applyTheme();
+        frame.setVisible(true);
+    }
+
+  void handleButton(String buttonValue) {
+
+        // parentheses
+        if (buttonValue.equals("(") || buttonValue.equals(")")) {
+            displayText += buttonValue;
+            expression += buttonValue;
+            displayLabel.setText(displayText);
+            return;
+        }
+        // numbers
+        if ("0123456789".contains(buttonValue)) {
+            if (justEvaluated) {
+                expression = "";
+                displayText = "";
+                justEvaluated = false;
+            }
+            displayText += buttonValue;
+            expression += buttonValue;
+            displayLabel.setText(displayText);
+            return;
+        }
+
+        // decimal
+        if (buttonValue.equals(".")) {
+            if (justEvaluated) {
+                expression = "";
+                displayText = "";
+                justEvaluated = false;
+            }
+            displayText += ".";
+            expression += ".";
+            displayLabel.setText(displayText);
+            return;
+        }
+
+        // percentage
+      if (buttonValue.equals("%")) {
+                try {
+                    if (!expression.isEmpty()) {
+                        double val = eval(expression) / 100.0;
+                        String s = removeZeroDecimal(val);
+                        expression = s;
+                        displayText = s;
+                        displayLabel.setText(displayText);
+                    }
+                } catch (Exception ex) {
+                    displayLabel.setText(displayText.isEmpty() ? "0" : displayText);
+                }
+                return;
+            }
+
+
+        // +/- negate
+       if (buttonValue.equals("+/-")) {
+            try {
+                if (!expression.isEmpty()) {
+                    double val = Double.parseDouble(expression);
+                    val = -val;
+                    String s = removeZeroDecimal(val);
+                    expression = s;
+                    displayText = s;
+                    displayLabel.setText(displayText);
+                }
+            } catch (Exception ex) {}
+            return;
+        }
+
+        // operators
+        if ("÷x-+".contains(buttonValue)) {
+            displayText += buttonValue;
+            expression += buttonValue;
+            displayLabel.setText(displayText);
+            return;
+        }
+
+        // scientific functions
+        if (buttonValue.equals("sin")) {
+            displayText += "sin(";
+            expression += "S(";
+            displayLabel.setText(displayText);
+            return;
+        }
+
+        if (buttonValue.equals("cos")) {
+            displayText += "cos(";
+            expression += "C(";
+            displayLabel.setText(displayText);
+            return;
+        }
+
+        if (buttonValue.equals("tan")) {
+            displayText += "tan(";
+            expression += "T(";
+            displayLabel.setText(displayText);
+            return;
+        }
+
+         if (buttonValue.equals("log")) {
+            displayText += "log(";
+            expression += "G(";
+            displayLabel.setText(displayText);
+            return;
+        }
+
+        if (buttonValue.equals("ln")) {
+            displayText += "ln(";
+            expression += "L(";
+            displayLabel.setText(displayText);
+            return;
+        }
+
+        if (buttonValue.equals("√")) {
+            displayText += "√(";
+            expression += "R(";
+            displayLabel.setText(displayText);
+            return;
+        }
+
+
+        if (buttonValue.equals("π")) {
+            displayText += "π";
+            expression += Math.PI;
+            displayLabel.setText(displayText);
+            return;
+        }
+
+        if (buttonValue.equals("e")) {
+            displayText += "e";
+            expression += Math.E;
+            displayLabel.setText(displayText);
+            return;
+        }
+
+        if (buttonValue.equals("x²")) {
+                if (!expression.isEmpty()) {
+                    expression += "^2";
+                    displayText += "²";
+                    displayLabel.setText(displayText);
+                }
+                return;
+            }
+
+
+        // equals
+          if (buttonValue.equals("=")) {
+    try {
+        // Convert expression into a Java-evaluable form
+        String jsExpr = expression;
+
+        // Replace symbols with Java equivalents
+        jsExpr = jsExpr.replace("x", "*");
+        jsExpr = jsExpr.replace("÷", "/");
+
+        // Convert trig to radians
+        jsExpr = jsExpr.replace("Math.sin(", "Math.sin(Math.toRadians(");
+        jsExpr = jsExpr.replace("Math.cos(", "Math.cos(Math.toRadians(");
+        jsExpr = jsExpr.replace("Math.tan(", "Math.tan(Math.toRadians(");
+
+        // Auto-close parentheses
+        int open = jsExpr.length() - jsExpr.replace("(", "").length();
+        int close = jsExpr.length() - jsExpr.replace(")", "").length();
+        while (close < open) {
+            jsExpr += ")";
+            close++;
+        }
+
+        // Remove trailing operators
+        while (jsExpr.endsWith("+") || jsExpr.endsWith("-") ||
+               jsExpr.endsWith("*") || jsExpr.endsWith("/")) {
+            jsExpr = jsExpr.substring(0, jsExpr.length() - 1);
+        }
+
+        if (jsExpr.isEmpty()) {
+            displayLabel.setText("0");
+            expression = "";
+            displayText = "";
+            justEvaluated = true;
+            return;
+        }
+
+        // Evaluate using Java's built-in engine-free evaluator
+        double result = eval(jsExpr);
+
+        String s = removeZeroDecimal(result);
+        displayLabel.setText(s);
+        expression = s;
+        displayText = s;
+        justEvaluated = true;
+
+    } catch (Exception ex) {
+        ex.printStackTrace();
+        displayLabel.setText(displayText.isEmpty() ? "0" : displayText);
+        justEvaluated = true;
+    }
+    return;
+}
+
+        if (buttonValue.equals("AC")) {
+            expression = "";
+            displayText = "";
+            displayLabel.setText("0");
+            return;
+        }
+
+        if (buttonValue.equals("Mode")) {
+            darkMode = !darkMode;
+            applyTheme();
+            return;
+        }
+
+        if (buttonValue.equals("←")) {
+            if (!displayText.isEmpty()) {
+                displayText = displayText.substring(0, displayText.length() - 1);
+            }
+            if (!expression.isEmpty()) {
+                expression = smartBackspace(expression);
+            }
+            displayLabel.setText(displayText.isEmpty() ? "0" : displayText);
+            return;
+        }
+    }
+                void applyTheme() {
+                if (darkMode) {
+                    frame.getContentPane().setBackground(customBlack);
+                    displayLabel.setBackground(customBlack);
+                    displayLabel.setForeground(Color.white);
+                } else {
+                    frame.getContentPane().setBackground(lightBackground);
+                    displayLabel.setBackground(lightBackground);
+                    displayLabel.setForeground(lightText);
+                }
+
+                for (Component c : buttonsPanel.getComponents()) {
+                    if (c instanceof JButton) {
+                        JButton b = (JButton) c;
+                        String v = b.getText();
+
+                        if (Arrays.asList(topSymbols).contains(v)) {
+                            b.setBackground(darkMode ? customLightGray : lightButton);
+                            b.setForeground(darkMode ? customBlack : lightText);
+                        } 
+                        else if (Arrays.asList(rightSymbols).contains(v)) {
+                            b.setBackground(customOrange);
+                            b.setForeground(Color.white);
+                        } 
+                        else {
+                            b.setBackground(darkMode ? customDarkGray : lightButton);
+                            b.setForeground(darkMode ? Color.white : lightText);
+                        }
+                    }
+                }
+                frame.repaint();
+            }
+                String removeZeroDecimal(double numDisplay){
+                    if(numDisplay % 1 == 0)
+                        {
+                        return Integer.toString((int) numDisplay);
+                    }
+                    return Double.toString(numDisplay);
+                }
+
+                 String squareLastTerm(String expr) {
+                         if (expr.isEmpty()){
+                            return expr;
+                         } 
+
+        String operators = "+-x÷*/(";
+        int idx = -1;
+
+        for (int i = expr.length() - 1; i >= 0; i--) {
+            if (operators.indexOf(expr.charAt(i)) != -1) {
+                idx = i;
+                break;
+            }
+        }
+
+        String before = (idx == -1) ? "" : expr.substring(0, idx + 1);
+        String last = (idx == -1) ? expr : expr.substring(idx + 1);
+
+        return before + "Math.pow(" + last + ",2)";
+    }
+
+    String smartBackspace(String expr){
+        String [] funcs = {"Math.sin(", "Math.cos(", "Math.tan(", "Math.log10(", "Math.log(", "Math.sqrt("};
+        for(String f : funcs){
+            if(expr.endsWith(f)){
+                return expr.substring(0, expr.length() - f.length());
+            }
+        }
+        return expr.substring(0, expr.length() - 1);
+    }
+
+   double eval(String expr) {
+    return new Object() {
+        int pos = -1, ch;
+
+        void nextChar() {
+            ch = (++pos < expr.length()) ? expr.charAt(pos) : -1;
+        }
+
+        boolean eat(int charToEat) {
+            while (ch == ' ') nextChar();
+            if (ch == charToEat) {
+                nextChar();
+                return true;
+            }
+            return false;
+        }
+
+        double parse() {
+            nextChar();
+            double x = parseExpression();
+            if (pos < expr.length()) throw new RuntimeException("Unexpected: " + (char) ch);
+            return x;
+        }
+
+        double parseExpression() {
+            double x = parseTerm();
+            for (;;) {
+                if      (eat('+')) x += parseTerm();
+                else if (eat('-')) x -= parseTerm();
+                else return x;
+            }
+        }
+
+        double parseTerm() {
+            double x = parseFactor();
+            for (;;) {
+                if      (eat('*')) x *= parseFactor();
+                else if (eat('/')) x /= parseFactor();
+                else return x;
+            }
+        }
+
+        double parseFactor() {
+
+            // scientific functions
+if (eat('S')) { eat('('); double v = parseExpression(); eat(')'); return Math.sin(Math.toRadians(v)); }
+if (eat('C')) { eat('('); double v = parseExpression(); eat(')'); return Math.cos(Math.toRadians(v)); }
+if (eat('T')) { eat('('); double v = parseExpression(); eat(')'); return Math.tan(Math.toRadians(v)); }
+if (eat('R')) { eat('('); double v = parseExpression(); eat(')'); return Math.sqrt(v); }
+if (eat('G')) { eat('('); double v = parseExpression(); eat(')'); return Math.log10(v); }
+if (eat('L')) { eat('('); double v = parseExpression(); eat(')'); return Math.log(v); }
+
+
+            if (eat('+')) return parseFactor();
+            if (eat('-')) return -parseFactor();
+
+            double x;
+            int startPos = this.pos;
+
+            if (eat('(')) {
+                x = parseExpression();
+                eat(')');
+            } else if ((ch >= '0' && ch <= '9') || ch == '.') {
+                while ((ch >= '0' && ch <= '9') || ch == '.') nextChar();
+                x = Double.parseDouble(expr.substring(startPos, this.pos));
+            } else {
+                throw new RuntimeException("Unexpected: " + (char) ch);
+            }
+
+            if (eat('^')) x = Math.pow(x, parseFactor());
+
+            return x;
+        }
+    }.parse();
+}
+
+  
+
+    public static void main(String[] args) {
+        new Calculator();
+    }
+}
