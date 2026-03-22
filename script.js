@@ -1,7 +1,6 @@
 let display = document.getElementById("display");
 let expression = "";
-let degMode = true;
-let parenOpen = true;
+let degMode = true; // DEG by default
 
 function updateDisplay() {
     display.textContent = expression || "0";
@@ -39,8 +38,15 @@ function backspace() {
 }
 
 function pressParen() {
-    expression += parenOpen ? "(" : ")";
-    parenOpen = !parenOpen;
+    let last = expression.slice(-1);
+
+    // Smart parentheses
+    if (/[0-9eπ)]/.test(last)) {
+        expression += ")";
+    } else {
+        expression += "(";
+    }
+
     updateDisplay();
 }
 
@@ -56,12 +62,18 @@ function pressPower2() {
 }
 
 function pressFunc(name) {
-    expression += name + "(";
+    if (name === "sqrt") {
+        expression += "√(";
+    } else {
+        expression += name + "(";
+    }
     updateDisplay();
 }
 
 function toggleMode() {
     degMode = !degMode;
+    document.querySelector("button[onclick='toggleMode()']").textContent =
+        degMode ? "Mode: DEG" : "Mode: RAD";
 }
 
 function calculate() {
@@ -70,12 +82,20 @@ function calculate() {
     try {
         let exp = expression;
 
+        // Replace constants
         exp = exp.replace(/π/g, "Math.PI").replace(/e/g, "Math.E");
+
+        // Replace √ with Math.sqrt
+        exp = exp.replace(/√\(/g, "Math.sqrt(");
+
+        // Replace x²
         exp = exp.replace(/(\d+(\.\d+)?)\^2/g, "Math.pow($1,2)");
-        exp = exp.replace(/sqrt\(/g, "Math.sqrt(");
+
+        // log, ln
         exp = exp.replace(/log\(/g, "Math.log10(");
         exp = exp.replace(/ln\(/g, "Math.log(");
 
+        // Trig functions with DEG/RAD
         exp = exp.replace(/sin\(([^)]+)\)/g, (_, a) =>
             degMode ? `Math.sin((${a})*Math.PI/180)` : `Math.sin(${a})`
         );
